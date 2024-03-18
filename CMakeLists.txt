@@ -15,6 +15,13 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 
+FetchContent_Declare(
+    raygui
+    GIT_REPOSITORY "https://github.com/raysan5/raygui.git"
+    GIT_TAG "master"
+    GIT_PROGRESS TRUE
+)
+
 FetchContent_MakeAvailable(raylib)
 
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.c")
