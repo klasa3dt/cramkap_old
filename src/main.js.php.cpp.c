@@ -67,7 +67,7 @@ void clientLoop()
         BeginDrawing();
         {
             ClearBackground(PINK);
-            DrawText("Clien", GetRenderWidth() >> 1, GetRenderHeight() >> 1, 20, BLACK);
+            DrawText("Clint", GetRenderWidth() >> 1, GetRenderHeight() >> 1, 20, BLACK);
             DrawFPS(10, 10);
         }
         EndDrawing();
