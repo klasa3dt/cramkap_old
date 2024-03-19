@@ -63,7 +63,6 @@ ConnectionType selectConnectionType () {
         }
         EndDrawing ();
     }
-
     return connectionType;
 }
 
@@ -73,20 +72,22 @@ void clientLoop () {
     ENetHost* client;
     ENetEvent event;
     ENetPeer* peer;
+    ENetPacket* packet;
+    char message[512] = {};
 
     client = enet_host_create (NULL, 1, 2, 0, 0);
 
     if (client) {
-        puts("wiadomo kto wiadomo co client istnieje czarnuchu ciesz sie i baw");
+        puts("wiadomo kto wiadomo co client istnieje koleszko ciesz sie i baw");
     }
 
-    enet_address_set_host (&address, "25.47.18.54");
+    enet_address_set_host (&address, "127.0.0.1");
     address.port = 3107;
 
     peer = enet_host_connect (client, &address, 1, 0);
 
     if (peer) {
-        puts("wiadomo kto wiadomo co peer istnieje czarnuchu ciesz sie i baw peer peer peer peer perr eppepperer");
+        puts("wiadomo kto wiadomo co peer istnieje koleszko ciesz sie i baw peer peer peer peer perr eppepperer");
     }
     
     if (!peer) {
@@ -94,34 +95,41 @@ void clientLoop () {
         exit (EXIT_FAILURE);
     }
 
+    bool connected = 0;
 
-    while (!WindowShouldClose()) {
-
-        if (IsKeyPressed (KEY_S)) {
-
-            if (
-                enet_host_service (client, &event, 5000) > 0
-            ) {
-                puts ("Connection to widomo co wiadomo kto succeeded");
-
-                char* message = "Wiadomo co wiadomo kto";
-                ENetPacket* packet = 
-                enet_packet_create (message, strlen(message) + 1, ENET_PACKET_FLAG_RELIABLE);
-
+        while (!WindowShouldClose()) {
+                    while (enet_host_service(client, &event, 0) > 0) {
+                switch (event.type) {
+                    case ENET_EVENT_TYPE_CONNECT: {
+                        printf("Connected to server wiadomo co wiadomo kto wiadomo kogo\n");
+                        connected = 1;
+                    } break;
+                    case ENET_EVENT_TYPE_RECEIVE: {
+                        printf("Message recieved! %s\n od wiadomo kogo wiadmoco co wiadomo czemu", event.packet->data);
+                        strcpy(message, event.packet->data);
+                        enet_packet_destroy(event.packet);
+                    } break;
+                    case ENET_EVENT_TYPE_DISCONNECT:
+                    case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                        printf("A client has disconnected\n");
+                        break;
+                }
+            }
+        
+        if (IsKeyPressed (KEY_S) && connected) {
+            if (peer->state == ENET_PEER_STATE_CONNECTED) {
+                packet = enet_packet_create ("Nigger", strlen("Nigger") + 1, ENET_PACKET_FLAG_RELIABLE);
                 enet_peer_send (peer, 0, packet);
+                enet_packet_destroy (packet);
             }
 
-            else {
-                enet_peer_reset (peer);
-
-                    puts ("Connection to wiadomo co wiadomo kto failed");
-            }
         }
 
         BeginDrawing (); {
 
             ClearBackground (PINK);
             DrawText ("Clint", GetRenderWidth () >> 1, GetRenderHeight () >> 1, 20, BLACK);
+            DrawText (message, GetRenderWidth () >> 1, (GetRenderHeight () >> 1) - 30, 20, BLACK);
             DrawFPS (10, 10);
         }
 
@@ -135,7 +143,7 @@ void serverLoop () {
     ENetAddress address;
     ENetHost* server;
     ENetEvent event;
-
+    ENetPacket* packet;
     address.host = ENET_HOST_ANY;
     address.port = 3107;
 
@@ -148,7 +156,7 @@ void serverLoop () {
 
     while (!WindowShouldClose ()) {
 
-        while (enet_host_service(server, &event, 0) > 0)
+        while (enet_host_service(server, &event, 2) > 0)
         {
             switch (event.type)
             {
@@ -165,7 +173,10 @@ void serverLoop () {
                         event.peer -> data,
                         event.channelID);
                 strcpy(message, event.packet->data);
+                packet = enet_packet_create ("Dostalem", strlen("Dostalem") + 1, ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send (event.peer, 0, packet);
                 enet_packet_destroy (event.packet);
+                enet_packet_destroy (packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 printf ("%s disconnected.\n", event.peer -> data);
