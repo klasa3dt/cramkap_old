@@ -1,6 +1,6 @@
 #define ENET_IMPLEMENTATION
-#include <raylib.h>
 #include "enet.h"
+#include <raylib.h>
 #include <stdio.h>
 
 typedef unsigned ConnectionType;
@@ -118,15 +118,14 @@ void clientLoop () {
         
         if (IsKeyPressed (KEY_S) && connected) {
             if (peer->state == ENET_PEER_STATE_CONNECTED) {
-                packet = enet_packet_create ("Nigger", strlen("Nigger") + 1, ENET_PACKET_FLAG_RELIABLE);
+                packet = enet_packet_create ("wyslalem", sizeof("wyslalem"), ENET_PACKET_FLAG_RELIABLE);
                 enet_peer_send (peer, 0, packet);
-                enet_packet_destroy (packet);
             }
 
         }
 
         BeginDrawing (); {
-
+            
             ClearBackground (PINK);
             DrawText ("Clint", GetRenderWidth () >> 1, GetRenderHeight () >> 1, 20, BLACK);
             DrawText (message, GetRenderWidth () >> 1, (GetRenderHeight () >> 1) - 30, 20, BLACK);
@@ -156,7 +155,7 @@ void serverLoop () {
 
     while (!WindowShouldClose ()) {
 
-        while (enet_host_service(server, &event, 2) > 0)
+        while (enet_host_service(server, &event, 0) > 0)
         {
             switch (event.type)
             {
@@ -173,14 +172,13 @@ void serverLoop () {
                         event.peer -> data,
                         event.channelID);
                 strcpy(message, event.packet->data);
-                packet = enet_packet_create ("Dostalem", strlen("Dostalem") + 1, ENET_PACKET_FLAG_RELIABLE);
+                packet = enet_packet_create ("Dostalem", sizeof("Dostalem"), ENET_PACKET_FLAG_RELIABLE);
                 enet_peer_send (event.peer, 0, packet);
                 enet_packet_destroy (event.packet);
-                enet_packet_destroy (packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", event.peer -> data);
-                event.peer -> data = NULL;
+                printf ("%s disconnected.\n", event.peer->data);
+                event.peer->data = NULL;
                 break;
             default:
                 break;
