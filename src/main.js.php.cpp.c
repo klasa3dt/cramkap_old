@@ -1,8 +1,6 @@
-#define ENET_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION
-#include "string.h"
-#include "enet.h"
-#include "raygui.h"
+#include <enet.h>
+#include <raygui.h>
 #include <raylib.h>
 #include <stdio.h>
 
