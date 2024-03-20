@@ -1,12 +1,20 @@
-#define ENET_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION
 #include "enet.h"
 #include "raygui.h"
 #include <raylib.h>
 #include <stdio.h>
-
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
+#include "client.cs.c.asm.obj.bin.out.in.cpp.c++.php.js.lua.css.sass.scss.xaml.xml.xht.htmx.html.xhtml.toml.json.jsx.tsx.ts.svelte.vue.asp.cshtml.html.lua.h"
+
+struct Player {
+    float posX;
+    float posY;
+    float velocity;
+    int id;
+    Color color;
+} typedef Player;
+
 
 typedef unsigned ConnectionType;
 enum ConnectionTypeBits {
@@ -15,17 +23,9 @@ enum ConnectionTypeBits {
     CONNECTION_TYPE_SERVER = 2
 };
 
-struct Player {
-    float posX;
-    float posY;
-    float velocity;
-} typedef Player;
-
-
 ConnectionType selectConnectionType ();
 void clientLoop ();
 void serverLoop ();
-void sendPlayerPosition (ENetPeer* peer, ENetPacket* packet, Player* player);
 int main (int argc, char** argv) {
 
     if (enet_initialize())
@@ -77,6 +77,11 @@ ConnectionType selectConnectionType () {
     }
     return connectionType;
 }
+void sendPlayerPosition (ENetPeer* peer, ENetPacket* packet, Player* player) {
+    packet = enet_packet_create (player, sizeof(player), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send (peer, 0, packet); 
+    enet_packet_destroy (packet);
+}
 
 void clientLoop () {
 
@@ -108,7 +113,6 @@ void clientLoop () {
 
     bool connected = 0;
     Player player = { 0, 0, 0.01 };
-
 
         while (!WindowShouldClose()) {
 
@@ -160,11 +164,9 @@ void clientLoop () {
 
 
         BeginDrawing (); {
-            
-            ClearBackground (PINK);
 
+            ClearBackground (PINK);
             DrawRectangle (player.posX, player.posY, 100, 100, WHITE);
-            
             DrawFPS (10, 10);
         }
 
@@ -182,6 +184,8 @@ void serverLoop () {
     address.host = ENET_HOST_ANY;
     address.port = 3107;
 
+    Player* player;
+
     int playersCount = 0;
 
     if (!(server = enet_host_create(&address, 32, 2, 0, 0)))
@@ -192,32 +196,12 @@ void serverLoop () {
 
     while (!WindowShouldClose ()) {
 
-        while (enet_host_service(server, &event, 0) > 0)
-        {
-            switch (event.type)
-            {
-            case ENET_EVENT_TYPE_CONNECT:
-                printf ("A new client connected from %x:%u.\n", 
-                        event.peer -> address.host,
-                        event.peer -> address.port);
-                event.peer -> data = "Client information";
-                break;
-            case ENET_EVENT_TYPE_RECEIVE:
-                enet_packet_destroy (event.packet);
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", event.peer->data);
-                enet_packet_destroy (event.packet);
-                break;
-            default:
-                break;
-            }
-        }
+        
 
         BeginDrawing (); {
 
             ClearBackground (BLUE);
-
+            DrawRectangle (player->posX, player->posY, 100, 100, WHITE);
             DrawFPS (10, 10);
         }
 
@@ -225,12 +209,4 @@ void serverLoop () {
     }
 
     enet_host_destroy(server);
-}
-
-
-
-void sendPlayerPosition (ENetPeer* peer, ENetPacket* packet, Player* player) {
-    packet = enet_packet_create (player, sizeof(player), ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send (peer, 0, packet); 
-    enet_packet_destroy (packet);
 }

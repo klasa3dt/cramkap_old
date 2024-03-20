@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "enet.h": "c",
+        "*.tcc": "c",
+        "limits": "c",
+        "server.css.cs.php.html.xaml.xml.xhtml.js.ts.jsx.tsx.svelte.scss.sass.lua.htm.h": "c"
+    }
+}
