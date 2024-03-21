@@ -4,9 +4,8 @@
 struct Player {
     float posX;
     float posY;
-    float velocity;
-    int id;
-    int color;
+    float speed;
+    int   color;
     char posChanged;
 } typedef Player;
 

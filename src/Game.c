@@ -6,6 +6,7 @@
 void loadGame(int width, int height, const char* title)
 {
     InitWindow(width, height, title);
+    SetTargetFPS (1000);
 }
 
 GameConnectionType selectGameConnectionType()
@@ -31,51 +32,27 @@ GameConnectionType selectGameConnectionType()
     return GAME_CONNECTION_TYPE_NONE;
 }
 
-bool windowAvailable()
-{
+bool windowAvailable() { 
+
     return !WindowShouldClose();
 }
 
-void gameLogic(Player* player)
-{
-    player->posChanged = false;
-
-    if (IsKeyDown(KEY_A))
-    {
-        player->posX -= player->velocity * GetFrameTime();
-        player->posChanged = true;
-    }
-
-    if (IsKeyDown(KEY_D)) {
-        player->posX += player->velocity * GetFrameTime();
-        player->posChanged = true;
-    }
-
-    if (IsKeyDown(KEY_W)) {
-        player->posY -= player->velocity * GetFrameTime();
-        player->posChanged = true;
-    }
-
-    if (IsKeyDown(KEY_S)) {
-        player->posY += player->velocity * GetFrameTime();
-        player->posChanged = true;
-    }
-
-    if (player->posX < 0) player->posX = 0;
-    if (player->posX + 100 > (float)GetRenderWidth()) player->posX = (float)GetRenderWidth() - 100;
-    if (player->posY < 0) player->posY = 0;
-    if (player->posY + 100 > (float)GetRenderHeight()) player->posY = (float)GetRenderHeight() - 100;
+void gameRender(GameState* state) {
 
     BeginDrawing();
 
     ClearBackground(PINK);
-    DrawRectangle((int)player->posX, (int)player->posY, 100, 100, WHITE);
-    DrawFPS(10, 10);
 
+    for (unsigned i = 0; i < state->playerCount; ++i) {
+
+        DrawRectangle((int)state->players[i].x, (int)state->players[i].y, 100, 100, WHITE);
+    }
+
+    DrawFPS(10, 10);
     EndDrawing();
 }
 
-void closeGame()
-{
+void closeGame() {
+
     CloseWindow();
 }
