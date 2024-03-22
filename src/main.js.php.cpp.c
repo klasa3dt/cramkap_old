@@ -2,9 +2,11 @@
 #include "Client.h"
 #include "Game.h"
 #include <threads.h>
+#include <stdio.h>
 
-void clientLoop ();
-void serverLoop ();
+void mainLoop();
+void serverThread();
+
 int main (int argc, char** argv) {
 
     loadGame(800, 600, "Simple multipayer game");
@@ -12,10 +14,13 @@ int main (int argc, char** argv) {
     switch (selectGameConnectionType())
     {
     case GAME_CONNECTION_TYPE_CLIENT:
-        clientLoop ();
+        mainLoop ();
         break;
     case GAME_CONNECTION_TYPE_SERVER:
-        serverLoop ();
+        thrd_t thread;
+        thrd_create(&thread, serverThread, NULL);
+        mainLoop();
+        thrd_join(thread, NULL);
         break;
     default:
         break;
@@ -24,11 +29,11 @@ int main (int argc, char** argv) {
     closeGame();
 }
 
-void clientLoop()
+void mainLoop()
 {
-    Client client = {};
-    Player player = { 0.f, 0.f, 140.f };
-
+    GameState gameState = {};
+    Client    client    = {};
+    Player    player    = { 0.f, 0.f, 140.f };
 
     clientInit(&client, "127.0.0.1", 3107);
 
@@ -43,6 +48,7 @@ void clientLoop()
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
                 printf("Message recieved! %s\n od wiadomo kogo wiadmoco co wiadomo czemu", client.event.packet->data);
+                memcpy(&gameState, client.event.packet->data, sizeof(GameState));
                 enet_packet_destroy(client.event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
@@ -54,10 +60,18 @@ void clientLoop()
             }
         }
 
-        gameLogic(&player);
+        gameRender(&gameState);
+        
+        updatePlayerPosition(&player);
 
         if (player.posChanged)
         {
+            GamePlayer playerData;
+
+            playerData.x = player.posX;
+            playerData.y = player.posY;
+            playerData.color = player.color;
+
             clientSendData(&client, &player, sizeof(player));
         }
     }
@@ -65,61 +79,38 @@ void clientLoop()
     clientTerminate(&client);
 }
 
-void serverThread()
-{
-    Server server = {};
+void serverThread () {
 
-    serverInit(&server, 3107);
+    GameState gameState;
+    Server server;
 
-    while (windowAvailable())
-    {
+    serverInit (&server, 3107);                
 
-    }
+    while (windowAvailable ()) {
 
-    serverTerminate(&server);
-}
+        while (serverHostService (&server) > 0) {
+            
+            switch (server.event.type) {
 
-void serverLoop () {
-
-    thrd_t thread;
-    thrd_create(&thread, serverThread, NULL);
-
-    Client client = {};
-    Player player = { 0.f, 0.f, 140.f };
-
-    clientInit(&client, "127.0.0.1", 3107);
-
-    while (windowAvailable())
-    {
-        while (clientHostService(&client) > 0)
-        {
-            switch (client.event.type)
-            {
-            case ENET_EVENT_TYPE_CONNECT:
-                printf("Connected to server wiadomo co wiadomo kto wiadomo kogo\n");
-                break;
-            case ENET_EVENT_TYPE_RECEIVE:
-                printf("Message recieved! %s\n od wiadomo kogo wiadmoco co wiadomo czemu", client.event.packet->data);
-                enet_packet_destroy(client.event.packet);
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-            case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
-                printf("Can't connect to the server\n");
-                break;
-            default:
-                break;
+                case ENET_EVENT_TYPE_CONNECT:
+                    puts ("Siemandero polaczeno ustawioneno z klientero/klienteremami");
+                    ++gameState.playerCount;
+                    break;
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    puts ("Narandero polaczeno zerwano z klientero/klienteremami");
+                    --gameState.playerCount;
+                    break;
+                case ENET_EVENT_TYPE_RECEIVE:
+                    gameState.players[server.event.peer->connectID] = *(GamePlayer*)server.event.packet->data;
+                    enet_packet_destroy (server.event.packet);
+                    break;
+                default:
+                    break;
             }
         }
 
-        gameLogic(&player);
-
-        if (player.posChanged)
-        {
-            clientSendData(&client, &player, sizeof(player));
-        }
+        serverSendDataToAllClients (&server, &gameState, sizeof(gameState));
     }
 
-    clientTerminate(&client);
-
-    thrd_join(thread, NULL);
+    serverTerminate (&server);
 }

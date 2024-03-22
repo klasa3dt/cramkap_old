@@ -4,16 +4,15 @@
 #include "Player.h"
 #include <stdbool.h>
 
-struct GamePlayers
+struct GamePlayer
 {
     float x, y;
     unsigned color;
-    unsigned id;
-} typedef GamePlayers;
+} typedef GamePlayer;
 
 struct GameState
 {
-    GamePlayers players[10];
+    GamePlayer players[10];
     unsigned playerCount;
 } typedef GameState;
 

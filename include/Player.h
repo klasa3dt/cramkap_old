@@ -9,4 +9,6 @@ struct Player {
     char posChanged;
 } typedef Player;
 
+void updatePlayerPosition(Player* player);
+
 #endif
